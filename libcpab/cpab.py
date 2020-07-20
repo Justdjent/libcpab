@@ -8,6 +8,9 @@ Created on Fri Nov 16 15:34:36 2018
 
 #%%
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from .core.utility import params, get_dir, create_dir
 from .core.tesselation import Tesselation1D, Tesselation2D, Tesselation3D
@@ -346,10 +349,10 @@ class Cpab(object):
         return v
     
     #%%
-    def visualize_vectorfield(self, theta, nb_points = 50, fig = plt.figure()):
+    def visualize_vectorfield(self, theta, save_path, nb_points=50):
         """ Utility function that helps visualize the vectorfield for a specific
-            parametrization vector theta 
-        Arguments:    
+            parametrization vector theta
+        Arguments:
             theta: [1, d] single parametrization vector
             nb_points: number of points in each dimension to plot i.e. in 2D
                 with nb_points=50 the function will plot 50*50=2500 arrows!
@@ -358,34 +361,38 @@ class Cpab(object):
             plot: handle to quiver plot
         """
         self._check_type(theta)
-        
+
         # Calculate vectorfield and convert to numpy
         grid = self.uniform_meshgrid([nb_points for _ in range(self.params.ndim)])
         v = self.calc_vectorfield(grid, theta)
         v = self.backend.tonumpy(v)
         grid = self.backend.tonumpy(grid)
-        
+        fig = plt.figure(figsize=(20, 20))
         # Plot
         if self.params.ndim == 1:
             ax = fig.add_subplot(111)
-            plot = ax.quiver(grid[0,:], np.zeros_like(grid), v, np.zeros_like(v), units='xy')
+            plot = ax.quiver(grid[0, :], np.zeros_like(grid), v, np.zeros_like(v), units='xy')
             ax.set_xlim(self.params.domain_min[0], self.params.domain_max[0])
         elif self.params.ndim == 2:
             ax = fig.add_subplot(111)
-            plot = ax.quiver(grid[0,:], grid[1,:], v[0,:], v[1,:], units='xy')
+            plot = ax.quiver(grid[0, :], grid[1, :], v[0, :], v[1, :], units='xy')
             ax.set_xlim(self.params.domain_min[0], self.params.domain_max[0])
-            ax.set_ylim(self.params.domain_min[1], self.params.domain_max[1])            
-        elif self.params.ndim==3:
+            ax.set_ylim(self.params.domain_min[1], self.params.domain_max[1])
+        elif self.params.ndim == 3:
             from mpl_toolkits.mplot3d import Axes3D
             ax = fig.add_subplot(111, projection='3d')
-            plot = ax.quiver(grid[0,:], grid[1,:], grid[2,:], v[0,:], v[1,:], v[2,:],
+            plot = ax.quiver(grid[0, :], grid[1, :], grid[2, :], v[0, :], v[1, :], v[2, :],
                              length=0.3, arrow_length_ratio=0.5)
             ax.set_xlim3d(self.params.domain_min[0], self.params.domain_max[0])
             ax.set_ylim3d(self.params.domain_min[1], self.params.domain_max[1])
             ax.set_zlim3d(self.params.domain_min[2], self.params.domain_max[2])
-            ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_zlabel('z')
+            ax.set_xlabel('x');
+            ax.set_ylabel('y');
+            ax.set_zlabel('z')
         plt.axis('equal')
         plt.title('Velocity field')
+        plt.savefig(save_path)
+        # plt.show()
         return plot
     
     #%%
